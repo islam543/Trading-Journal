@@ -1,0 +1,27 @@
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-black);
+}
+
+.app-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    padding: 2rem;
+    transition: margin-left var(--transition-normal);
+    min-height: 100vh;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .app-content {
+        margin-left: var(--sidebar-collapsed-width);
+    }
+}
+
+@media (max-width: 480px) {
+    .app-content {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+}
