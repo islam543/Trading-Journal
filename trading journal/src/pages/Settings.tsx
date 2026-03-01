@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { AppSettings, ThemeIntensity, RiskFormat } from '../types';
+import type { AppSettings, RiskFormat } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import './Settings.css';
 
-const defaultSettings: AppSettings = {
-    themeIntensity: 'medium',
+const defaultSettings: Omit<AppSettings, 'themeIntensity'> = {
     defaultRiskFormat: 'percentage',
     enabledTradeFields: {
         commission: true,
@@ -24,11 +24,12 @@ const defaultSettings: AppSettings = {
 };
 
 const Settings = () => {
-    const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+    const { themeIntensity, setThemeIntensity } = useTheme();
+    const [settings, setSettings] = useState<Omit<AppSettings, 'themeIntensity'>>(defaultSettings);
     const [newLabel, setNewLabel] = useState('');
 
-    const handleThemeChange = (intensity: ThemeIntensity) => {
-        setSettings({ ...settings, themeIntensity: intensity });
+    const handleThemeChange = (intensity: any) => {
+        setThemeIntensity(intensity);
     };
 
     const handleRiskFormatChange = (format: RiskFormat) => {
@@ -106,21 +107,21 @@ const Settings = () => {
                         <label className="setting-label">Accent Intensity</label>
                         <div className="intensity-options">
                             <button
-                                className={`intensity-btn ${settings.themeIntensity === 'low' ? 'active' : ''}`}
+                                className={`intensity-btn ${themeIntensity === 'low' ? 'active' : ''}`}
                                 onClick={() => handleThemeChange('low')}
                             >
                                 <div className="intensity-preview low"></div>
                                 <span>Low</span>
                             </button>
                             <button
-                                className={`intensity-btn ${settings.themeIntensity === 'medium' ? 'active' : ''}`}
+                                className={`intensity-btn ${themeIntensity === 'medium' ? 'active' : ''}`}
                                 onClick={() => handleThemeChange('medium')}
                             >
                                 <div className="intensity-preview medium"></div>
                                 <span>Medium</span>
                             </button>
                             <button
-                                className={`intensity-btn ${settings.themeIntensity === 'high' ? 'active' : ''}`}
+                                className={`intensity-btn ${themeIntensity === 'high' ? 'active' : ''}`}
                                 onClick={() => handleThemeChange('high')}
                             >
                                 <div className="intensity-preview high"></div>

@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // FRED API Proxy Endpoint
 app.get('/api/fred', async (req, res) => {
@@ -70,7 +70,7 @@ app.get('/api/trades', async (req, res) => {
 
 app.post('/api/trades', async (req, res) => {
     try {
-        const { symbol, type, entryPrice, exitPrice, quantity, notes, status } = req.body;
+        const { symbol, type, entryPrice, exitPrice, quantity, notes, status, imageUrl } = req.body;
 
         // Calculate PnL if closed
         let pnl = null;
@@ -88,7 +88,8 @@ app.post('/api/trades', async (req, res) => {
                 quantity: Number(quantity),
                 notes,
                 status: status || 'OPEN',
-                pnl: pnl
+                pnl: pnl,
+                imageUrl: imageUrl || null
             }
         });
         res.json(trade);
@@ -108,6 +109,17 @@ app.delete('/api/trades/:id', async (req, res) => {
     } catch (error) {
         console.error('Error deleting trade:', error);
         res.status(500).json({ error: 'Failed to delete trade' });
+    }
+});
+
+// ForexFactory News Proxy
+app.get('/api/news', async (req, res) => {
+    try {
+        const response = await axios.get('https://nfs.faireconomy.media/ff_calendar_thisweek.json');
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error fetching news:', error.message);
+        res.status(500).json({ error: 'Failed to fetch news' });
     }
 });
 

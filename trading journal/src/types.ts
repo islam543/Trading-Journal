@@ -10,6 +10,7 @@ export interface Trade {
     pnl: number | null;
     status: string;
     notes: string | null;
+    imageUrl: string | null;
     timestamp: string;
 }
 

@@ -1,83 +1,52 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NewsItem, ImpactLevel } from '../types';
 import './News.css';
 
-// Mock news data
-const mockNews: NewsItem[] = [
-    // {
-    //     id: '1',
-    //     title: 'US Non-Farm Payrolls',
-    //     date: '2026-01-26',
-    //     time: '13:30',
-    //     impact: 'High',
-    //     currency: 'USD',
-    //     forecast: '180K',
-    //     previous: '216K',
-    //     actual: '195K'
-    // },
-    // {
-    //     id: '2',
-    //     title: 'Federal Reserve Interest Rate Decision',
-    //     date: '2026-01-26',
-    //     time: '19:00',
-    //     impact: 'High',
-    //     currency: 'USD',
-    //     forecast: '4.50%',
-    //     previous: '4.50%'
-    // },
-    // {
-    //     id: '3',
-    //     title: 'ECB President Lagarde Speech',
-    //     date: '2026-01-25',
-    //     time: '14:00',
-    //     impact: 'Medium',
-    //     currency: 'EUR',
-    //     previous: '-'
-    // },
-    // {
-    //     id: '4',
-    //     title: 'UK GDP Growth Rate',
-    //     date: '2026-01-25',
-    //     time: '09:30',
-    //     impact: 'Medium',
-    //     currency: 'GBP',
-    //     forecast: '0.2%',
-    //     previous: '0.1%',
-    //     actual: '0.3%'
-    // },
-    // {
-    //     id: '5',
-    //     title: 'Japan CPI Year-over-Year',
-    //     date: '2026-01-24',
-    //     time: '23:30',
-    //     impact: 'High',
-    //     currency: 'JPY',
-    //     forecast: '2.8%',
-    //     previous: '2.6%',
-    //     actual: '2.9%'
-    // },
-    // {
-    //     id: '6',
-    //     title: 'German Manufacturing PMI',
-    //     date: '2026-01-24',
-    //     time: '10:00',
-    //     impact: 'Low',
-    //     currency: 'EUR',
-    //     forecast: '47.5',
-    //     previous: '47.1',
-    //     actual: '47.8'
-    // }
-];
-
 const News = () => {
+    const [news, setNews] = useState<NewsItem[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
     const [filterImpact, setFilterImpact] = useState<ImpactLevel | 'All'>('All');
     const [filterDate, setFilterDate] = useState<string>('All');
 
+    useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const response = await fetch('/api/news');
+                if (!response.ok) throw new Error('Failed to fetch news');
+                const data = await response.json();
+
+                // Filter for High Impact USD news AND map to NewsItem structure
+                const formattedNews: NewsItem[] = data
+                    .filter((item: any) => item.impact === 'High' && item.country === 'USD')
+                    .map((item: any, index: number) => ({
+                        id: String(index),
+                        title: item.title,
+                        date: item.date.split('T')[0] || item.date,
+                        time: item.time,
+                        impact: item.impact as ImpactLevel,
+                        currency: item.country,
+                        forecast: item.forecast,
+                        previous: item.previous
+                    }));
+
+                setNews(formattedNews);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNews();
+    }, []);
+
     // Get unique dates
-    const uniqueDates = Array.from(new Set(mockNews.map(item => item.date))).sort().reverse();
+    const uniqueDates = Array.from(new Set(news.map(item => item.date))).sort().reverse();
 
     // Filter news
-    const filteredNews = mockNews.filter(item => {
+    const filteredNews = news.filter(item => {
         const matchesImpact = filterImpact === 'All' || item.impact === filterImpact;
         const matchesDate = filterDate === 'All' || item.date === filterDate;
         return matchesImpact && matchesDate;
@@ -150,6 +119,9 @@ const News = () => {
 
             {/* News Feed */}
             <div className="news-content">
+                {loading && <div className="news-loading glow-purple">Loading news...</div>}
+                {error && <div className="news-error">{error}</div>}
+                {!loading && !error && news.length === 0 && <div className="news-empty">No high-impact USD news found for this week.</div>}
                 <div className="news-feed">
                     {Object.entries(groupedByDate).map(([date, items]) => (
                         <div key={date} className="news-date-group">

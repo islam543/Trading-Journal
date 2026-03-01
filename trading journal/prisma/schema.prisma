@@ -17,5 +17,6 @@ model Trade {
   pnl        Float?
   status     String   @default("OPEN")
   notes      String?
+  imageUrl   String?
   timestamp  DateTime @default(now())
 }

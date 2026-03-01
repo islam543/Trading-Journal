@@ -16,8 +16,30 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
         status: 'OPEN',
         notes: ''
     });
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('Image must be less than 5MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = () => {
+        setImagePreview(null);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,7 +54,8 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                     ...formData,
                     entryPrice: parseFloat(formData.entryPrice),
                     exitPrice: formData.exitPrice ? parseFloat(formData.exitPrice) : null,
-                    quantity: parseFloat(formData.quantity)
+                    quantity: parseFloat(formData.quantity),
+                    imageUrl: imagePreview
                 })
             });
 
@@ -47,6 +70,7 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                 status: 'OPEN',
                 notes: ''
             });
+            setImagePreview(null);
             onTradeAdded();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
@@ -123,6 +147,36 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                         </div>
                     )}
                 </div>
+
+                {/* Chart Screenshot Upload */}
+                <div className="form-group">
+                    <label>Chart Screenshot</label>
+                    <div className="image-upload-area">
+                        {imagePreview ? (
+                            <div className="image-preview-container">
+                                <img src={imagePreview} alt="Chart preview" className="image-preview" />
+                                <button type="button" className="image-remove-btn" onClick={removeImage} title="Remove image">
+                                    ×
+                                </button>
+                            </div>
+                        ) : (
+                            <label className="image-upload-label">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="image-upload-input"
+                                />
+                                <div className="image-upload-placeholder">
+                                    <span className="upload-icon">📷</span>
+                                    <span className="upload-text">Click to upload chart screenshot</span>
+                                    <span className="upload-hint">PNG, JPG up to 5MB</span>
+                                </div>
+                            </label>
+                        )}
+                    </div>
+                </div>
+
                 <div className="form-group">
                     <label>Notes</label>
                     <textarea
