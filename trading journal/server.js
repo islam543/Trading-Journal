@@ -321,7 +321,11 @@ app.post("/api/ai-analysis", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`FRED Proxy ready at http://localhost:${PORT}/api/fred`);
-});
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`FRED Proxy ready at http://localhost:${PORT}/api/fred`);
+  });
+}
+
+export default app;
