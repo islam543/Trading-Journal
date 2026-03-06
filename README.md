@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+📈 AI-Powered Trading Journal
+A professional full-stack trading journal designed to help traders track performance and analyze market fundamentals using Llama 3.1 via Groq. This application bridges the gap between technical execution and fundamental awareness.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+✨ Key Features
+📊 Dynamic Trade Journaling: Log trades with symbols, entry/exit prices, and automated PnL calculation.
 
-Currently, two official plugins are available:
+🤖 AI Fundamental Analysis: Real-time analysis of economic events (from FRED and FMP) using Llama 3.1 to provide market sentiment (Bullish/Bearish/Neutral).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+📅 Economic Calendar: Stay ahead of the curve with a live feed of high-impact news and data releases.
 
-## React Compiler
+🔐 User Isolation: Secure Google Authentication ensuring that your trades and data are private to your account.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+📱 Responsive Dashboard: Built with Tailwind CSS and Framer Motion for a sleek, "tech-noir" aesthetic.
 
-## Expanding the ESLint configuration
+🛠️ Tech Stack
+Frontend
+Next.js 15+ (App Router)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Tailwind CSS (Styling)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Lucide React (Icons)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Recharts (Performance Analytics)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Backend & Database
+Node.js & Express (API Layer)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Prisma ORM (Database Management)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+PostgreSQL (Hosted on Supabase/Vercel)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+AI & Data APIs
+Groq Cloud: Llama 3.1 8B for instant fundamental sentiment.
+
+FRED API: Federal Reserve Economic Data.
+
+Financial Modeling Prep: Global economic calendar.
+
+🚀 Getting Started
+1. Clone the repository
+Bash
+
+git clone https://github.com/islam543/Trading-Journal.git
+cd Trading-Journal
+2. Install Dependencies
+Bash
+
+npm install
+3. Set up Environment Variables
+Create a .env file in the root directory:
+
+Code snippet
+
+DATABASE_URL="your_postgresql_url"
+GROQ_API_KEY="your_groq_key"
+FINNHUB_API_KEY="your_finnhub_key"
+FRED_API_KEY="your_fred_key"
+NEXTAUTH_SECRET="your_secret"
+GOOGLE_CLIENT_ID="your_id"
+GOOGLE_CLIENT_SECRET="your_secret"
+4. Database Setup
+Bash
+
+npx prisma generate
+npx prisma db push
+5. Run the Project
+Bash
+
+# Start frontend and backend
+npm run dev
+🛡️ Data Privacy & Security
+This application uses Row-Level Security (RLS) patterns via Prisma. No trade data is public; every database query is filtered by the unique userId provided by Google OAuth, ensuring your edge stays your own.
+
+👨‍💻 Author
+Islam Computer Science Student @ Qatar University (Class of 2026) LinkedIn | Portfolio
