@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
-import type { DashboardMetrics, DayPnL, GoalProgress } from '../types';
-import { mockTrades } from '../mockData';
+import React, { useState, useEffect, useMemo } from 'react';
+import type { Trade, DashboardMetrics, DayPnL, GoalProgress } from '../types';
 import MetricCard from '../components/MetricCard';
 import PerformanceChart from '../components/PerformanceChart';
 import CalendarView from '../components/CalendarView';
@@ -8,13 +7,32 @@ import GoalsSection from '../components/GoalsSection';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
+    const [trades, setTrades] = useState<Trade[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTrades = async () => {
+            try {
+                const res = await fetch('/api/trades');
+                if (!res.ok) throw new Error('Failed to fetch');
+                const data = await res.json();
+                setTrades(data);
+            } catch (err) {
+                console.error('Error fetching trades:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTrades();
+    }, []);
+
     // Calculate dashboard metrics
     const metrics: DashboardMetrics = useMemo(() => {
-        const totalTrades = mockTrades.length;
-        const totalPnL = mockTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+        const totalTrades = trades.length;
+        const totalPnL = trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
 
-        const winningTrades = mockTrades.filter(t => (t.pnl || 0) > 0);
-        const losingTrades = mockTrades.filter(t => (t.pnl || 0) < 0);
+        const winningTrades = trades.filter(t => (t.pnl || 0) > 0);
+        const losingTrades = trades.filter(t => (t.pnl || 0) < 0);
 
         const winRate = totalTrades > 0 ? (winningTrades.length / totalTrades) * 100 : 0;
 
@@ -32,7 +50,7 @@ const Dashboard: React.FC = () => {
         let runningPnL = 0;
 
         // Sort trades by date for drawdown calculation
-        const sortedTrades = [...mockTrades].sort((a, b) =>
+        const sortedTrades = [...trades].sort((a, b) =>
             new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
@@ -70,13 +88,13 @@ const Dashboard: React.FC = () => {
             profitFactor: Math.min(profitFactor, 99.9),
             recoveryFactor: Math.min(recoveryFactor, 99.9),
         };
-    }, []);
+    }, [trades]);
 
     // Calculate daily PnL for calendar
     const dailyPnL: DayPnL[] = useMemo(() => {
         const pnlByDate = new Map<string, { netPnL: number; trades: number }>();
 
-        mockTrades.forEach(trade => {
+        trades.forEach(trade => {
             const dateStr = new Date(trade.timestamp).toISOString().split('T')[0];
             const existing = pnlByDate.get(dateStr) || { netPnL: 0, trades: 0 };
             pnlByDate.set(dateStr, {
@@ -90,7 +108,7 @@ const Dashboard: React.FC = () => {
             netPnL: data.netPnL,
             trades: data.trades,
         }));
-    }, []);
+    }, [trades]);
 
     // Calculate goals progress
     const goals: GoalProgress[] = useMemo(() => {
@@ -102,7 +120,7 @@ const Dashboard: React.FC = () => {
         const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
         // Weekly PnL
-        const weeklyTrades = mockTrades.filter(t => {
+        const weeklyTrades = trades.filter(t => {
             const tradeDate = new Date(t.timestamp);
             return tradeDate >= currentWeekStart;
         });
@@ -111,7 +129,7 @@ const Dashboard: React.FC = () => {
         const weeklyPercentage = (weeklyPnL / weeklyTarget) * 100;
 
         // Monthly PnL
-        const monthlyTrades = mockTrades.filter(t => {
+        const monthlyTrades = trades.filter(t => {
             const tradeDate = new Date(t.timestamp);
             return tradeDate >= currentMonthStart;
         });
@@ -133,7 +151,18 @@ const Dashboard: React.FC = () => {
                 percentage: monthlyPercentage,
             },
         ];
-    }, []);
+    }, [trades]);
+
+    if (loading) {
+        return (
+            <div className="dashboard-container">
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p>Loading dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">

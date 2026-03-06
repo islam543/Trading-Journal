@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     AreaChart,
     Area,
@@ -9,53 +9,80 @@ import {
     ResponsiveContainer,
     ReferenceLine
 } from 'recharts';
+import type { Trade } from '../types';
 import './PerformanceChart.css';
-
-interface ChartData {
-    time: string;
-    equity: number;
-    pnl: number;
-}
-
-const mockDailyData: ChartData[] = [
-    { time: 'Jan 01', equity: 10000, pnl: 0 },
-    { time: 'Jan 02', equity: 10250, pnl: 250 },
-    { time: 'Jan 03', equity: 10100, pnl: -150 },
-    { time: 'Jan 04', equity: 10450, pnl: 350 },
-    { time: 'Jan 05', equity: 10800, pnl: 350 },
-    { time: 'Jan 06', equity: 10600, pnl: -200 },
-    { time: 'Jan 07', equity: 11200, pnl: 600 },
-    { time: 'Jan 08', equity: 11100, pnl: -100 },
-    { time: 'Jan 09', equity: 11500, pnl: 400 },
-    { time: 'Jan 10', equity: 12000, pnl: 500 },
-    { time: 'Jan 11', equity: 11800, pnl: -200 },
-    { time: 'Jan 12', equity: 12450, pnl: 650 },
-];
-
-const mockWeeklyData: ChartData[] = [
-    { time: 'Week 1', equity: 10000, pnl: 0 },
-    { time: 'Week 2', equity: 10800, pnl: 800 },
-    { time: 'Week 3', equity: 11500, pnl: 700 },
-    { time: 'Week 4', equity: 12450, pnl: 950 },
-];
-
-const mockMonthlyData: ChartData[] = [
-    { time: 'Oct', equity: 9000, pnl: -1000 },
-    { time: 'Nov', equity: 9500, pnl: 500 },
-    { time: 'Dec', equity: 10000, pnl: 500 },
-    { time: 'Jan', equity: 12450, pnl: 2450 },
-];
 
 const PerformanceChart: React.FC = () => {
     const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+    const [trades, setTrades] = useState<Trade[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTrades = async () => {
+            try {
+                const res = await fetch('/api/trades');
+                if (!res.ok) throw new Error('Failed to fetch');
+                const data = await res.json();
+                setTrades(data);
+            } catch (err) {
+                console.error('Error fetching trades:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTrades();
+    }, []);
 
     const data = useMemo(() => {
-        switch (timeframe) {
-            case 'weekly': return mockWeeklyData;
-            case 'monthly': return mockMonthlyData;
-            default: return mockDailyData;
+        if (trades.length === 0) return [{ time: 'Now', equity: 10000, pnl: 0 }];
+
+        const sorted = [...trades].sort(
+            (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+
+        const initialEquity = 10000;
+        let runningEquity = initialEquity;
+        const points: { time: string; equity: number; pnl: number }[] = [
+            { time: 'Start', equity: initialEquity, pnl: 0 },
+        ];
+
+        if (timeframe === 'daily') {
+            const byDay = new Map<string, number>();
+            sorted.forEach((t) => {
+                const day = new Date(t.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                byDay.set(day, (byDay.get(day) || 0) + (t.pnl || 0));
+            });
+            byDay.forEach((pnl, day) => {
+                runningEquity += pnl;
+                points.push({ time: day, equity: runningEquity, pnl });
+            });
+        } else if (timeframe === 'weekly') {
+            const byWeek = new Map<string, number>();
+            sorted.forEach((t) => {
+                const d = new Date(t.timestamp);
+                const weekStart = new Date(d);
+                weekStart.setDate(d.getDate() - d.getDay());
+                const label = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                byWeek.set(label, (byWeek.get(label) || 0) + (t.pnl || 0));
+            });
+            byWeek.forEach((pnl, week) => {
+                runningEquity += pnl;
+                points.push({ time: `W ${week}`, equity: runningEquity, pnl });
+            });
+        } else {
+            const byMonth = new Map<string, number>();
+            sorted.forEach((t) => {
+                const month = new Date(t.timestamp).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                byMonth.set(month, (byMonth.get(month) || 0) + (t.pnl || 0));
+            });
+            byMonth.forEach((pnl, month) => {
+                runningEquity += pnl;
+                points.push({ time: month, equity: runningEquity, pnl });
+            });
         }
-    }, [timeframe]);
+
+        return points;
+    }, [trades, timeframe]);
 
     const currentEquity = data[data.length - 1].equity;
     const initialEquity = data[0].equity;
@@ -94,6 +121,11 @@ const PerformanceChart: React.FC = () => {
             </div>
 
             <div className="chart-wrapper">
+                {loading && trades.length === 0 ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 350, color: 'rgba(255,255,255,0.5)' }}>
+                        Loading chart data…
+                    </div>
+                ) : (
                 <ResponsiveContainer width="100%" height={350}>
                     <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
@@ -138,6 +170,7 @@ const PerformanceChart: React.FC = () => {
                         <ReferenceLine y={initialEquity} stroke="rgba(255,255,255,0.1)" strokeDasharray="5 5" />
                     </AreaChart>
                 </ResponsiveContainer>
+                )}
             </div>
         </div>
     );
