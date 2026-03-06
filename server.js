@@ -2,10 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import axios from "axios";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = globalThis.__prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalThis.__prisma = prisma;
+import prisma from "./lib/prisma.js";
 
 dotenv.config();
 
