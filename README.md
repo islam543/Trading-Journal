@@ -1,75 +1,114 @@
-📈 AI-Powered Trading Journal
-A professional full-stack trading journal designed to help traders track performance and analyze market fundamentals using Llama 3.1 via Groq. This application bridges the gap between technical execution and fundamental awareness.
+# 📈 AI-Powered Trading Journal
 
-✨ Key Features
-📊 Dynamic Trade Journaling: Log trades with symbols, entry/exit prices, and automated PnL calculation.
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://trading-journal-islam.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://prisma.io)
+[![AI-Llama 3.1](https://img.shields.io/badge/AI-Llama%203.1-orange?style=for-the-badge&logo=meta&logoColor=white)](https://groq.com)
 
-🤖 AI Fundamental Analysis: Real-time analysis of economic events (from FRED and FMP) using Llama 3.1 to provide market sentiment (Bullish/Bearish/Neutral).
+A professional-grade full-stack trading journal designed to bridge the gap between technical execution and fundamental analysis. Developed as a personal project to track market performance with real-time AI-driven insights.
 
-📅 Economic Calendar: Stay ahead of the curve with a live feed of high-impact news and data releases.
+---
 
-🔐 User Isolation: Secure Google Authentication ensuring that your trades and data are private to your account.
+## ✨ Key Features
 
-📱 Responsive Dashboard: Built with Tailwind CSS and Framer Motion for a sleek, "tech-noir" aesthetic.
+| Feature | Description |
+|---|---|
+| 📊 **Trade Management** | Log, update, and track trades with automated PnL calculation and status management (Open/Closed) |
+| 🤖 **AI Market Analyst** | Integrated **Llama 3.1 (via Groq)** that analyzes raw economic data to provide instant fundamental sentiment (Bullish/Bearish/Neutral) |
+| 📅 **Economic Calendar** | Live feed of high-impact news from **Forex Factory** and **Financial Modeling Prep** to stay ahead of market volatility |
+| 📉 **Macro Data Integration** | Proxied access to **FRED (Federal Reserve Economic Data)** for deep-dive fundamental research |
+| 🔐 **User Data Isolation** | Secure **Google OAuth** integration — your trading data is private and accessible only to you |
+| 🎨 **Cyberpunk Aesthetic** | Sleek dark-mode UI built with **Tailwind CSS** and **Framer Motion** for a high-performance feel |
 
-🛠️ Tech Stack
-Frontend
-Next.js 15+ (App Router)
+---
 
-Tailwind CSS (Styling)
+## 🛠️ Tech Stack
 
-Lucide React (Icons)
+### Frontend
+- **React 19 / Vite** — High-speed frontend development
+- **Tailwind CSS** — Modern utility-first styling
+- **Lucide React** — Crisp, consistent iconography
+- **Recharts** — Data visualization for equity curves and PnL
 
-Recharts (Performance Analytics)
+### Backend & Database
+- **Node.js / Express** — Robust API layer for data handling and proxying
+- **Prisma 5 (ORM)** — Type-safe database access
+- **PostgreSQL (Supabase)** — Scalable relational database
 
-Backend & Database
-Node.js & Express (API Layer)
+### AI & Data Providers
+- **Groq Cloud** — Ultra-fast inference for Llama 3.1 fundamental analysis
+- **FRED API** — Economic indicator data (GDP, CPI, Interest Rates)
+- **Faireconomy API** — Real-time Forex news feeds
 
-Prisma ORM (Database Management)
+---
 
-PostgreSQL (Hosted on Supabase/Vercel)
+## 🚀 Installation & Setup
 
-AI & Data APIs
-Groq Cloud: Llama 3.1 8B for instant fundamental sentiment.
+### 1. Clone the Repository
 
-FRED API: Federal Reserve Economic Data.
-
-Financial Modeling Prep: Global economic calendar.
-
-🚀 Getting Started
-1. Clone the repository
-Bash
-
+```bash
 git clone https://github.com/islam543/Trading-Journal.git
 cd Trading-Journal
-2. Install Dependencies
-Bash
+```
 
+### 2. Install Dependencies
+
+```bash
 npm install
-3. Set up Environment Variables
-Create a .env file in the root directory:
+```
 
-Code snippet
+### 3. Environment Configuration
 
-DATABASE_URL="your_postgresql_url"
-GROQ_API_KEY="your_groq_key"
-FINNHUB_API_KEY="your_finnhub_key"
-FRED_API_KEY="your_fred_key"
-NEXTAUTH_SECRET="your_secret"
-GOOGLE_CLIENT_ID="your_id"
-GOOGLE_CLIENT_SECRET="your_secret"
-4. Database Setup
-Bash
+Create a `.env` file in the root directory and add your keys:
 
+```env
+# Database
+DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres?pgbouncer=true"
+
+# AI & APIs
+GROQ_API_KEY="your_groq_api_key"
+FMP_API_KEY="your_fmp_api_key"
+FRED_API_KEY="your_fred_api_key"
+
+# Authentication
+AUTH_SECRET="your_nextauth_secret"
+AUTH_GOOGLE_ID="your_google_client_id"
+AUTH_GOOGLE_SECRET="your_google_client_secret"
+```
+
+### 4. Database Sync
+
+```bash
 npx prisma generate
 npx prisma db push
-5. Run the Project
-Bash
+```
 
-# Start frontend and backend
+### 5. Run Development Servers
+
+```bash
+# Start Vite frontend and Express backend simultaneously
 npm run dev
-🛡️ Data Privacy & Security
-This application uses Row-Level Security (RLS) patterns via Prisma. No trade data is public; every database query is filtered by the unique userId provided by Google OAuth, ensuring your edge stays your own.
+```
 
-👨‍💻 Author
-Islam Computer Science Student @ Qatar University (Class of 2026) LinkedIn | Portfolio
+---
+
+## 🔒 Data Isolation & Security
+
+This project implements **multi-tenancy** logic. Every trade entry in the database is linked to a unique `userId` generated via Google OAuth.
+
+- **Privacy:** Users can only view, edit, or delete trades they have created
+- **Authentication:** Middleware protection ensures `/api/trades` endpoints are inaccessible without a valid session
+
+---
+
+## 👨‍💻 Author
+
+**Islam** — Computer Science Student @ Qatar University (Class of 2026)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin&logoColor=white)](#)
+[![Portfolio](https://img.shields.io/badge/Portfolio-Visit-000000?style=flat&logo=vercel&logoColor=white)](#)
+[![Twitter](https://img.shields.io/badge/Twitter-Follow-1DA1F2?style=flat&logo=twitter&logoColor=white)](#)
+
+---
+
+> **Disclaimer:** This tool is for educational and journaling purposes only and does not constitute financial advice.
