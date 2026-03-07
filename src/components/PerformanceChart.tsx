@@ -25,7 +25,7 @@ const PerformanceChart: React.FC = () => {
                 const res = await authFetch('/api/trades');
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
-                setTrades(data);
+                setTrades(data.trades || data);
             } catch (err) {
                 console.error('Error fetching trades:', err);
             } finally {
