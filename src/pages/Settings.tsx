@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppSettings, RiskFormat } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import { Moon, Sun } from 'lucide-react';
 import './Settings.css';
 
 const defaultSettings: Omit<AppSettings, 'themeIntensity'> = {
@@ -24,7 +25,7 @@ const defaultSettings: Omit<AppSettings, 'themeIntensity'> = {
 };
 
 const Settings = () => {
-    const { themeIntensity, setThemeIntensity } = useTheme();
+    const { themeIntensity, setThemeIntensity, themeMode, toggleThemeMode } = useTheme();
     const [settings, setSettings] = useState<Omit<AppSettings, 'themeIntensity'>>(defaultSettings);
     const [newLabel, setNewLabel] = useState('');
 
@@ -100,6 +101,26 @@ const Settings = () => {
                         <div>
                             <h2 className="section-title">Theme Preferences</h2>
                             <p className="section-description">Adjust the visual intensity of the interface</p>
+                        </div>
+                    </div>
+
+                    <div className="setting-item">
+                        <label className="setting-label">Theme Mode</label>
+                        <div className="theme-mode-toggle">
+                            <button
+                                className={`theme-mode-btn ${themeMode === 'dark' ? 'active' : ''}`}
+                                onClick={() => { if (themeMode !== 'dark') toggleThemeMode(); }}
+                            >
+                                <Moon size={18} />
+                                <span>Dark</span>
+                            </button>
+                            <button
+                                className={`theme-mode-btn ${themeMode === 'light' ? 'active' : ''}`}
+                                onClick={() => { if (themeMode !== 'light') toggleThemeMode(); }}
+                            >
+                                <Sun size={18} />
+                                <span>Light</span>
+                            </button>
                         </div>
                     </div>
 

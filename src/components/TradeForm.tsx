@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { ChevronDown, X, Plus } from 'lucide-react';
 import './TradeForm.css';
 
 interface TradeFormProps {
@@ -7,17 +8,88 @@ interface TradeFormProps {
     onCancel: () => void;
 }
 
+const STRATEGIES = [
+    'Trend Following',
+    'Breakout',
+    'Reversal',
+    'Scalping',
+    'Swing Trade',
+    'Mean Reversion',
+    'Momentum',
+    'Range Trading',
+    'News Based',
+    'Other',
+];
+
+interface CustomSelectProps {
+    label: string;
+    value: string;
+    options: { value: string; label: string }[];
+    onChange: (value: string) => void;
+}
+
+const CustomSelect = ({ label, value, options, onChange }: CustomSelectProps) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const selected = options.find(o => o.value === value);
+
+    return (
+        <div className="form-group">
+            <label>{label}</label>
+            <div className="custom-select" ref={ref}>
+                <button
+                    type="button"
+                    className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
+                    onClick={() => setIsOpen(!isOpen)}
+                >
+                    <span>{selected?.label || 'Select...'}</span>
+                    <ChevronDown size={16} className={`select-chevron ${isOpen ? 'rotated' : ''}`} />
+                </button>
+                {isOpen && (
+                    <div className="custom-select-dropdown">
+                        {options.map(opt => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                className={`custom-select-option ${opt.value === value ? 'selected' : ''}`}
+                                onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
     const { authFetch } = useAuth();
     const [formData, setFormData] = useState({
         symbol: '',
         type: 'BUY',
         entryPrice: '',
-        exitPrice: '',
-        quantity: '',
-        status: 'OPEN',
+        time: '',
+        strategy: '',
+        stopLoss: '',
+        takeProfit: '',
+        pnl: '',
         notes: ''
     });
+    const [confluenceTags, setConfluenceTags] = useState<string[]>([]);
+    const [tagInput, setTagInput] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -26,7 +98,6 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             setError('Image must be less than 5MB');
             return;
@@ -43,6 +114,25 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
         setImagePreview(null);
     };
 
+    const addTag = () => {
+        const tag = tagInput.trim();
+        if (tag && !confluenceTags.includes(tag)) {
+            setConfluenceTags([...confluenceTags, tag]);
+            setTagInput('');
+        }
+    };
+
+    const removeTag = (tag: string) => {
+        setConfluenceTags(confluenceTags.filter(t => t !== tag));
+    };
+
+    const handleTagKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag();
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -53,11 +143,17 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...formData,
+                    symbol: formData.symbol,
+                    type: formData.type,
                     entryPrice: parseFloat(formData.entryPrice),
-                    exitPrice: formData.exitPrice ? parseFloat(formData.exitPrice) : null,
-                    quantity: parseFloat(formData.quantity),
-                    imageUrl: imagePreview
+                    time: formData.time || null,
+                    strategy: formData.strategy || null,
+                    stopLoss: formData.stopLoss ? parseFloat(formData.stopLoss) : null,
+                    takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : null,
+                    pnl: formData.pnl ? parseFloat(formData.pnl) : null,
+                    confluenceTags,
+                    notes: formData.notes || null,
+                    imageUrl: imagePreview,
                 })
             });
 
@@ -67,11 +163,14 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                 symbol: '',
                 type: 'BUY',
                 entryPrice: '',
-                exitPrice: '',
-                quantity: '',
-                status: 'OPEN',
+                time: '',
+                strategy: '',
+                stopLoss: '',
+                takeProfit: '',
+                pnl: '',
                 notes: ''
             });
+            setConfluenceTags([]);
             setImagePreview(null);
             onTradeAdded();
         } catch (err) {
@@ -96,16 +195,17 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                             required
                         />
                     </div>
-                    <div className="form-group">
-                        <label>Type</label>
-                        <select
-                            value={formData.type}
-                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        >
-                            <option value="BUY">BUY</option>
-                            <option value="SELL">SELL</option>
-                        </select>
-                    </div>
+
+                    <CustomSelect
+                        label="Direction"
+                        value={formData.type}
+                        options={[
+                            { value: 'BUY', label: '🟢 BUY (Long)' },
+                            { value: 'SELL', label: '🔴 SELL (Short)' },
+                        ]}
+                        onChange={(v) => setFormData({ ...formData, type: v })}
+                    />
+
                     <div className="form-group">
                         <label>Entry Price</label>
                         <input
@@ -113,41 +213,92 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                             step="any"
                             value={formData.entryPrice}
                             onChange={(e) => setFormData({ ...formData, entryPrice: e.target.value })}
+                            placeholder="0.00"
                             required
                         />
                     </div>
+
                     <div className="form-group">
-                        <label>Quantity</label>
+                        <label>Time</label>
+                        <input
+                            type="datetime-local"
+                            value={formData.time}
+                            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                        />
+                    </div>
+
+                    <CustomSelect
+                        label="Strategy"
+                        value={formData.strategy}
+                        options={[
+                            { value: '', label: 'Select strategy...' },
+                            ...STRATEGIES.map(s => ({ value: s, label: s })),
+                        ]}
+                        onChange={(v) => setFormData({ ...formData, strategy: v })}
+                    />
+
+                    <div className="form-group">
+                        <label>Stop Loss</label>
                         <input
                             type="number"
                             step="any"
-                            value={formData.quantity}
-                            onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                            required
+                            value={formData.stopLoss}
+                            onChange={(e) => setFormData({ ...formData, stopLoss: e.target.value })}
+                            placeholder="0.00"
                         />
                     </div>
+
                     <div className="form-group">
-                        <label>Status</label>
-                        <select
-                            value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        >
-                            <option value="OPEN">OPEN</option>
-                            <option value="CLOSED">CLOSED</option>
-                        </select>
+                        <label>Take Profit</label>
+                        <input
+                            type="number"
+                            step="any"
+                            value={formData.takeProfit}
+                            onChange={(e) => setFormData({ ...formData, takeProfit: e.target.value })}
+                            placeholder="0.00"
+                        />
                     </div>
-                    {formData.status === 'CLOSED' && (
-                        <div className="form-group">
-                            <label>Exit Price</label>
-                            <input
-                                type="number"
-                                step="any"
-                                value={formData.exitPrice}
-                                onChange={(e) => setFormData({ ...formData, exitPrice: e.target.value })}
-                                required
-                            />
+
+                    <div className="form-group">
+                        <label>P&L ($)</label>
+                        <input
+                            type="number"
+                            step="any"
+                            value={formData.pnl}
+                            onChange={(e) => setFormData({ ...formData, pnl: e.target.value })}
+                            placeholder="Manual P&L"
+                        />
+                    </div>
+                </div>
+
+                {/* Confluence Tags */}
+                <div className="form-group">
+                    <label>Confluence Tags</label>
+                    <div className="tag-input-wrapper">
+                        <div className="tags-container">
+                            {confluenceTags.map(tag => (
+                                <span key={tag} className="tag-chip">
+                                    {tag}
+                                    <button type="button" onClick={() => removeTag(tag)} className="tag-remove">
+                                        <X size={12} />
+                                    </button>
+                                </span>
+                            ))}
                         </div>
-                    )}
+                        <div className="tag-input-row">
+                            <input
+                                type="text"
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={handleTagKeyDown}
+                                placeholder="Type a tag and press Enter..."
+                                className="tag-input"
+                            />
+                            <button type="button" onClick={addTag} className="tag-add-btn" disabled={!tagInput.trim()}>
+                                <Plus size={16} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Chart Screenshot Upload */}
@@ -185,6 +336,7 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                         rows={3}
+                        placeholder="Trade rationale, observations..."
                     />
                 </div>
                 {error && <p className="form-error">{error}</p>}

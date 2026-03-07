@@ -6,12 +6,11 @@
     border-radius: 16px;
     overflow: hidden;
     transition: all var(--transition-normal);
-    cursor: pointer;
     will-change: transform;
 }
 
 .trade-card:hover {
-    transform: translateY(-8px) scale(1.02);
+    transform: translateY(-4px);
     background: var(--glass-bg-hover);
     border-color: rgba(255, 255, 255, 0.15);
     box-shadow: var(--glow-purple), 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -82,27 +81,49 @@
     color: var(--text-white);
 }
 
-/* Expand Indicator */
-.expand-indicator {
+/* Delete Button */
+.trade-delete-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(168, 85, 247, 0.2);
-    border: 1px solid rgba(168, 85, 247, 0.4);
-    color: var(--primary-purple);
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: rgba(239, 68, 68, 0.6);
+    cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.expand-indicator:hover {
-    background: rgba(168, 85, 247, 0.3);
-    border-color: rgba(168, 85, 247, 0.6);
-    transform: scale(1.1);
+.trade-delete-btn:hover,
+.trade-delete-btn.confirm {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+}
+
+.trade-delete-btn.confirm {
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+/* Strategy Badge */
+.trade-strategy-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
 .trade-direction-badge {
@@ -126,118 +147,11 @@
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* PnL Summary (Always Visible) */
-.trade-pnl-summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    margin-bottom: 1rem;
-}
-
-.summary-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-/* Collapsed State - Reduce spacing */
-.trade-card.collapsed .trade-card-content {
-    padding-bottom: 1rem;
-}
-
-.trade-card.collapsed .trade-pnl-summary {
-    margin-bottom: 0;
-}
-
-/* Status Badge */
-.status-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.status-badge.open {
-    background: rgba(59, 130, 246, 0.15);
-    color: #3b82f6;
-}
-
-.status-badge.closed {
-    background: rgba(107, 114, 128, 0.15);
-    color: #9ca3af;
-}
-
-/* Expandable Details Container */
-.trade-details {
-    overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        opacity 0.3s ease,
-        margin-top 0.3s ease;
-}
-
-.trade-details.hidden {
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0;
-}
-
-.trade-details.visible {
-    max-height: 1200px;
-    opacity: 1;
-    margin-top: 0.5rem;
-}
-
-/* PnL Section */
-.trade-pnl-section {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.trade-pnl-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.trade-pnl-row:last-child {
-    margin-bottom: 0;
-}
-
-.trade-pnl-label {
-    font-size: 0.875rem;
-    color: var(--text-gray);
-}
-
-.trade-pnl-value {
-    font-weight: 600;
-    font-size: 1rem;
-}
-
-.trade-net-pnl {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.trade-pnl-positive {
-    color: #22c55e;
-}
-
-.trade-pnl-negative {
-    color: #ef4444;
-}
-
 /* Metrics Grid */
 .trade-metrics {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-bottom: 1rem;
 }
 
@@ -246,6 +160,11 @@
     padding: 0.75rem;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.trade-metric.pnl-metric {
+    grid-column: 1 / -1;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .trade-metric-label {
@@ -295,6 +214,9 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .confluence-tag {
@@ -307,12 +229,41 @@
     font-weight: 500;
 }
 
+/* PnL Values */
+.trade-pnl-positive {
+    color: #22c55e;
+}
+
+.trade-pnl-negative {
+    color: #ef4444;
+}
+
+.trade-net-pnl {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Card Footer */
+.trade-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.trade-time {
+    font-size: 0.75rem;
+    color: var(--text-gray);
+}
+
 /* Date */
 .trade-date {
     font-size: 0.75rem;
     color: var(--text-gray-dark);
     text-align: right;
-    margin-top: 0.5rem;
+    margin-left: auto;
 }
 
 /* Zoom Modal */

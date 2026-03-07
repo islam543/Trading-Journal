@@ -1,17 +1,56 @@
-export type TradeDirection = 'Buy' | 'Sell';
+export type TradeDirection = 'BUY' | 'SELL';
 
 export interface Trade {
     id: number;
     symbol: string;
     type: string;
     entryPrice: number;
-    exitPrice: number | null;
-    quantity: number;
+    time: string | null;
+    strategy: string | null;
+    stopLoss: number | null;
+    takeProfit: number | null;
     pnl: number | null;
-    status: string;
+    confluenceTags: string[];
     notes: string | null;
     imageUrl: string | null;
     timestamp: string;
+}
+
+export interface PaginatedTrades {
+    trades: Trade[];
+    total: number;
+    page: number;
+    totalPages: number;
+}
+
+export interface UserSettings {
+    id: number;
+    userId: number;
+    theme: 'dark' | 'light';
+    dashboardWidgets: DashboardWidgets;
+    tradeCardVisibility: TradeCardVisibility;
+    themeIntensity: ThemeIntensity;
+}
+
+export interface DashboardWidgets {
+    metrics: boolean;
+    performance: boolean;
+    calendar: boolean;
+    goals: boolean;
+    recentActivity: boolean;
+    distribution: boolean;
+}
+
+export interface TradeCardVisibility {
+    entryPrice: boolean;
+    stopLoss: boolean;
+    takeProfit: boolean;
+    pnl: boolean;
+    strategy: boolean;
+    confluenceTags: boolean;
+    notes: boolean;
+    image: boolean;
+    time: boolean;
 }
 
 export interface DashboardMetrics {

@@ -67,11 +67,26 @@ app.get("/api/fred", async (req, res) => {
 // Trades API Endpoints
 app.get("/api/trades", authMiddleware, async (req, res) => {
   try {
-    const trades = await prisma.trade.findMany({
-      where: { userId: req.user.id },
-      orderBy: { timestamp: "desc" },
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const [trades, total] = await Promise.all([
+      prisma.trade.findMany({
+        where: { userId: req.user.id },
+        orderBy: { timestamp: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.trade.count({ where: { userId: req.user.id } }),
+    ]);
+
+    res.json({
+      trades,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
     });
-    res.json(trades);
   } catch (error) {
     console.error("Error fetching trades:", error);
     res.status(500).json({ error: "Failed to fetch trades" });
@@ -84,30 +99,28 @@ app.post("/api/trades", authMiddleware, async (req, res) => {
       symbol,
       type,
       entryPrice,
-      exitPrice,
-      quantity,
+      time,
+      strategy,
+      stopLoss,
+      takeProfit,
+      pnl,
+      confluenceTags,
       notes,
-      status,
       imageUrl,
     } = req.body;
-
-    // Calculate PnL if closed
-    let pnl = null;
-    if (status === "CLOSED" && entryPrice && exitPrice && quantity) {
-      const multiplier = type === "BUY" ? 1 : -1;
-      pnl = (exitPrice - entryPrice) * quantity * multiplier;
-    }
 
     const trade = await prisma.trade.create({
       data: {
         symbol,
         type,
         entryPrice: Number(entryPrice),
-        exitPrice: exitPrice ? Number(exitPrice) : null,
-        quantity: Number(quantity),
-        notes,
-        status: status || "OPEN",
-        pnl: pnl,
+        time: time || null,
+        strategy: strategy || null,
+        stopLoss: stopLoss != null ? Number(stopLoss) : null,
+        takeProfit: takeProfit != null ? Number(takeProfit) : null,
+        pnl: pnl != null ? Number(pnl) : null,
+        confluenceTags: Array.isArray(confluenceTags) ? confluenceTags : [],
+        notes: notes || null,
         imageUrl: imageUrl || null,
         userId: req.user.id,
       },
@@ -126,10 +139,13 @@ app.put("/api/trades/:id", authMiddleware, async (req, res) => {
       symbol,
       type,
       entryPrice,
-      exitPrice,
-      quantity,
+      time,
+      strategy,
+      stopLoss,
+      takeProfit,
+      pnl,
+      confluenceTags,
       notes,
-      status,
       imageUrl,
     } = req.body;
 
@@ -140,24 +156,20 @@ app.put("/api/trades/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "Trade not found" });
     }
 
-    let pnl = null;
-    if (status === "CLOSED" && entryPrice && exitPrice && quantity) {
-      const multiplier = type === "BUY" ? 1 : -1;
-      pnl = (exitPrice - entryPrice) * quantity * multiplier;
-    }
-
     const trade = await prisma.trade.update({
       where: { id: Number(id) },
       data: {
         symbol,
         type,
-        entryPrice: entryPrice ? Number(entryPrice) : undefined,
-        exitPrice: exitPrice ? Number(exitPrice) : null,
-        quantity: quantity ? Number(quantity) : undefined,
-        notes,
-        status,
-        pnl,
-        imageUrl: imageUrl || null,
+        entryPrice: entryPrice != null ? Number(entryPrice) : undefined,
+        time: time !== undefined ? time : undefined,
+        strategy: strategy !== undefined ? strategy : undefined,
+        stopLoss: stopLoss !== undefined ? (stopLoss != null ? Number(stopLoss) : null) : undefined,
+        takeProfit: takeProfit !== undefined ? (takeProfit != null ? Number(takeProfit) : null) : undefined,
+        pnl: pnl !== undefined ? (pnl != null ? Number(pnl) : null) : undefined,
+        confluenceTags: confluenceTags !== undefined ? (Array.isArray(confluenceTags) ? confluenceTags : []) : undefined,
+        notes: notes !== undefined ? notes : undefined,
+        imageUrl: imageUrl !== undefined ? (imageUrl || null) : undefined,
       },
     });
     res.json(trade);
@@ -183,6 +195,106 @@ app.delete("/api/trades/:id", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Error deleting trade:", error);
     res.status(500).json({ error: "Failed to delete trade" });
+  }
+});
+
+// User Settings Endpoints
+app.get("/api/settings", authMiddleware, async (req, res) => {
+  try {
+    let settings = await prisma.userSettings.findUnique({
+      where: { userId: req.user.id },
+    });
+
+    if (!settings) {
+      settings = await prisma.userSettings.create({
+        data: { userId: req.user.id },
+      });
+    }
+
+    res.json(settings);
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    res.status(500).json({ error: "Failed to fetch settings" });
+  }
+});
+
+app.put("/api/settings", authMiddleware, async (req, res) => {
+  try {
+    const { theme, dashboardWidgets, tradeCardVisibility, themeIntensity } = req.body;
+
+    const settings = await prisma.userSettings.upsert({
+      where: { userId: req.user.id },
+      update: {
+        ...(theme !== undefined && { theme }),
+        ...(dashboardWidgets !== undefined && { dashboardWidgets }),
+        ...(tradeCardVisibility !== undefined && { tradeCardVisibility }),
+        ...(themeIntensity !== undefined && { themeIntensity }),
+      },
+      create: {
+        userId: req.user.id,
+        ...(theme !== undefined && { theme }),
+        ...(dashboardWidgets !== undefined && { dashboardWidgets }),
+        ...(tradeCardVisibility !== undefined && { tradeCardVisibility }),
+        ...(themeIntensity !== undefined && { themeIntensity }),
+      },
+    });
+
+    res.json(settings);
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    res.status(500).json({ error: "Failed to update settings" });
+  }
+});
+
+// AI Macro Analysis Endpoint
+app.post("/api/ai-macro-analysis", authMiddleware, async (req, res) => {
+  try {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "GROQ_API_KEY is not configured." });
+    }
+
+    const { indicators } = req.body;
+
+    const response = await axios.post(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "system",
+            content:
+              'You are a macro-economic analyst. Analyze the following economic indicator data and provide a JSON response with exactly this structure (no markdown, no code blocks, just raw JSON): {"summary":"2-3 sentence macro overview","regime":"Risk-On or Risk-Off or Neutral","impacts":[{"asset":"NASDAQ","direction":"Bullish or Bearish or Neutral","reasoning":"1-2 sentence explanation"},{"asset":"GOLD","direction":"Bullish or Bearish or Neutral","reasoning":"1-2 sentence explanation"},{"asset":"EURUSD","direction":"Bullish or Bearish or Neutral","reasoning":"1-2 sentence explanation"}],"keyInsights":["insight1","insight2","insight3"]}. Respond ONLY with valid JSON.',
+          },
+          {
+            role: "user",
+            content: JSON.stringify(indicators),
+          },
+        ],
+        temperature: 0.3,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    let aiContent = response.data.choices[0].message.content;
+    aiContent = aiContent
+      .replace(/```json\s*/gi, "")
+      .replace(/```\s*/g, "")
+      .trim();
+    try {
+      const parsed = JSON.parse(aiContent);
+      res.json(parsed);
+    } catch {
+      res.json({ summary: aiContent, regime: "Neutral", impacts: [], keyInsights: [] });
+    }
+  } catch (error) {
+    console.error("Error with AI macro analysis:", error.message);
+    res.status(500).json({ error: "Failed to get AI macro analysis" });
   }
 });
 

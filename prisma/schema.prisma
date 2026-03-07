@@ -9,27 +9,40 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
   passwordHash String?
-  googleId     String?  @unique
+  googleId     String?       @unique
   name         String?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime      @default(now())
   trades       Trade[]
+  settings     UserSettings?
 }
 
 model Trade {
-  id         Int      @id @default(autoincrement())
-  symbol     String
-  type       String
-  entryPrice Float
-  exitPrice  Float?
-  quantity   Float
-  pnl        Float?
-  status     String   @default("OPEN")
-  notes      String?
-  imageUrl   String?
-  timestamp  DateTime @default(now())
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id])
+  id             Int      @id @default(autoincrement())
+  symbol         String
+  type           String
+  entryPrice     Float
+  time           String?
+  strategy       String?
+  stopLoss       Float?
+  takeProfit     Float?
+  pnl            Float?
+  confluenceTags Json     @default("[]")
+  notes          String?
+  imageUrl       String?
+  timestamp      DateTime @default(now())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+model UserSettings {
+  id                    Int     @id @default(autoincrement())
+  userId                Int     @unique
+  user                  User    @relation(fields: [userId], references: [id])
+  theme                 String  @default("dark")
+  dashboardWidgets      Json    @default("{\"metrics\":true,\"performance\":true,\"calendar\":true,\"goals\":true,\"recentActivity\":true,\"distribution\":true}")
+  tradeCardVisibility   Json    @default("{\"entryPrice\":true,\"stopLoss\":true,\"takeProfit\":true,\"pnl\":true,\"strategy\":true,\"confluenceTags\":true,\"notes\":true,\"image\":true,\"time\":true}")
+  themeIntensity        String  @default("medium")
 }

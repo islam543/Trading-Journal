@@ -1,24 +1,48 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Trade, DashboardMetrics, DayPnL, GoalProgress } from '../types';
+import type { Trade, DashboardMetrics, DayPnL, GoalProgress, DashboardWidgets } from '../types';
 import MetricCard from '../components/MetricCard';
 import PerformanceChart from '../components/PerformanceChart';
 import CalendarView from '../components/CalendarView';
 import GoalsSection from '../components/GoalsSection';
 import { useAuth } from '../contexts/AuthContext';
+import { Settings, X } from 'lucide-react';
 import './Dashboard.css';
+
+const defaultWidgets: DashboardWidgets = {
+    metrics: true,
+    performance: true,
+    calendar: true,
+    goals: true,
+    recentActivity: true,
+    distribution: true,
+};
+
+const widgetLabels: Record<keyof DashboardWidgets, string> = {
+    metrics: 'Metrics Grid',
+    performance: 'Performance Chart',
+    calendar: 'Trading Calendar',
+    goals: 'Goals Section',
+    recentActivity: 'Recent Activity',
+    distribution: 'Market Distribution',
+};
 
 const Dashboard: React.FC = () => {
     const [trades, setTrades] = useState<Trade[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showCustomize, setShowCustomize] = useState(false);
+    const [widgets, setWidgets] = useState<DashboardWidgets>(() => {
+        const saved = localStorage.getItem('dashboardWidgets');
+        return saved ? JSON.parse(saved) : defaultWidgets;
+    });
     const { authFetch } = useAuth();
 
     useEffect(() => {
         const fetchTrades = async () => {
             try {
-                const res = await authFetch('/api/trades');
+                const res = await authFetch('/api/trades?limit=100');
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
-                setTrades(data);
+                setTrades(data.trades || []);
             } catch (err) {
                 console.error('Error fetching trades:', err);
             } finally {
@@ -166,13 +190,51 @@ const Dashboard: React.FC = () => {
         );
     }
 
+    const toggleWidget = (key: keyof DashboardWidgets) => {
+        const updated = { ...widgets, [key]: !widgets[key] };
+        setWidgets(updated);
+        localStorage.setItem('dashboardWidgets', JSON.stringify(updated));
+    };
+
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
-                <h1 className="page-title">Dashboard Overview</h1>
-                <p className="page-subtitle">Track your trading performance and equity growth</p>
+                <div>
+                    <h1 className="page-title">Dashboard Overview</h1>
+                    <p className="page-subtitle">Track your trading performance and equity growth</p>
+                </div>
+                <button className="customize-btn" onClick={() => setShowCustomize(true)}>
+                    <Settings size={18} />
+                    <span>Customize</span>
+                </button>
             </div>
 
+            {showCustomize && (
+                <div className="customize-overlay" onClick={() => setShowCustomize(false)}>
+                    <div className="customize-modal" onClick={e => e.stopPropagation()}>
+                        <div className="customize-header">
+                            <h3>Customize Dashboard</h3>
+                            <button className="customize-close" onClick={() => setShowCustomize(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p className="customize-description">Toggle which widgets are visible on your dashboard.</p>
+                        <div className="customize-options">
+                            {(Object.keys(widgetLabels) as Array<keyof DashboardWidgets>).map(key => (
+                                <label key={key} className="customize-option">
+                                    <span>{widgetLabels[key]}</span>
+                                    <div className="toggle-switch">
+                                        <input type="checkbox" checked={widgets[key]} onChange={() => toggleWidget(key)} />
+                                        <span className="toggle-slider"></span>
+                                    </div>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {widgets.metrics && (
             <div className="metrics-grid">
                 <MetricCard
                     title="Total Net P&L"
@@ -229,21 +291,29 @@ const Dashboard: React.FC = () => {
                     sentiment={metrics.recoveryFactor >= 2 ? 'positive' : metrics.recoveryFactor >= 1 ? 'neutral' : 'negative'}
                 />
             </div>
+            )}
 
+            {widgets.performance && (
             <div className="charts-section">
                 <PerformanceChart />
             </div>
+            )}
 
+            {widgets.calendar && (
             <div className="calendar-section">
                 <h2 className="section-title">Trading Calendar</h2>
                 <CalendarView dailyPnL={dailyPnL} />
             </div>
+            )}
 
+            {widgets.goals && (
             <div className="goals-section">
                 <GoalsSection goals={goals} />
             </div>
+            )}
 
             <div className="secondary-grid">
+                {widgets.recentActivity && (
                 <div className="card glass recent-activity">
                     <h3>Recent Performance Highlights</h3>
                     <div className="highlight-item">
@@ -272,13 +342,16 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
                 </div>
+                )}
 
+                {widgets.distribution && (
                 <div className="card glass trade-distribution">
                     <h3>Market Distribution</h3>
                     <div className="distribution-placeholder">
                         <p>Market exposure analytics coming soon...</p>
                     </div>
                 </div>
+                )}
             </div>
         </div>
     );
