@@ -1,73 +1,114 @@
-# React + TypeScript + Vite
+# 📈 AI-Powered Trading Journal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://trading-journal-islam.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://prisma.io)
+[![AI-Llama 3.1](https://img.shields.io/badge/AI-Llama%203.1-orange?style=for-the-badge&logo=meta&logoColor=white)](https://groq.com)
 
-Currently, two official plugins are available:
+A professional-grade full-stack trading journal designed to bridge the gap between technical execution and fundamental analysis. Developed as a personal project to track market performance with real-time AI-driven insights.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Feature | Description |
+|---|---|
+| 📊 **Trade Management** | Log, update, and track trades with automated PnL calculation and status management (Open/Closed) |
+| 🤖 **AI Market Analyst** | Integrated **Llama 3.1 (via Groq)** that analyzes raw economic data to provide instant fundamental sentiment (Bullish/Bearish/Neutral) |
+| 📅 **Economic Calendar** | Live feed of high-impact news from **Forex Factory** and **Financial Modeling Prep** to stay ahead of market volatility |
+| 📉 **Macro Data Integration** | Proxied access to **FRED (Federal Reserve Economic Data)** for deep-dive fundamental research |
+| 🔐 **User Data Isolation** | Secure **Google OAuth** integration — your trading data is private and accessible only to you |
+| 🎨 **Cyberpunk Aesthetic** | Sleek dark-mode UI built with **Tailwind CSS** and **Framer Motion** for a high-performance feel |
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Frontend
+- **React 19 / Vite** — High-speed frontend development
+- **Tailwind CSS** — Modern utility-first styling
+- **Lucide React** — Crisp, consistent iconography
+- **Recharts** — Data visualization for equity curves and PnL
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Backend & Database
+- **Node.js / Express** — Robust API layer for data handling and proxying
+- **Prisma 5 (ORM)** — Type-safe database access
+- **PostgreSQL (Supabase)** — Scalable relational database
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### AI & Data Providers
+- **Groq Cloud** — Ultra-fast inference for Llama 3.1 fundamental analysis
+- **FRED API** — Economic indicator data (GDP, CPI, Interest Rates)
+- **Faireconomy API** — Real-time Forex news feeds
+
+---
+
+## 🚀 Installation & Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/islam543/Trading-Journal.git
+cd Trading-Journal
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Install Dependencies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+### 3. Environment Configuration
+
+Create a `.env` file in the root directory and add your keys:
+
+```env
+# Database
+DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres?pgbouncer=true"
+
+# AI & APIs
+GROQ_API_KEY="your_groq_api_key"
+FMP_API_KEY="your_fmp_api_key"
+FRED_API_KEY="your_fred_api_key"
+
+# Authentication
+AUTH_SECRET="your_nextauth_secret"
+AUTH_GOOGLE_ID="your_google_client_id"
+AUTH_GOOGLE_SECRET="your_google_client_secret"
+```
+
+### 4. Database Sync
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 5. Run Development Servers
+
+```bash
+# Start Vite frontend and Express backend simultaneously
+npm run dev
+```
+
+---
+
+## 🔒 Data Isolation & Security
+
+This project implements **multi-tenancy** logic. Every trade entry in the database is linked to a unique `userId` generated via Google OAuth.
+
+- **Privacy:** Users can only view, edit, or delete trades they have created
+- **Authentication:** Middleware protection ensures `/api/trades` endpoints are inaccessible without a valid session
+
+---
+
+## 👨‍💻 Author
+
+**Islam** — Computer Science Student @ Qatar University (Class of 2026)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin&logoColor=white)](#)
+[![Portfolio](https://img.shields.io/badge/Portfolio-Visit-000000?style=flat&logo=vercel&logoColor=white)](#)
+[![Twitter](https://img.shields.io/badge/Twitter-Follow-1DA1F2?style=flat&logo=twitter&logoColor=white)](#)
+
+---
+
+> **Disclaimer:** This tool is for educational and journaling purposes only and does not constitute financial advice.
