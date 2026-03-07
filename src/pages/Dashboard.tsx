@@ -337,7 +337,7 @@ const Dashboard: React.FC = () => {
                         <div className="highlight-content">
                             <p className="highlight-title">Avg. Profit / Trade</p>
                             <p className="highlight-value">
-                                +${(metrics.totalPnL / metrics.totalTrades).toFixed(2)}
+                                +${metrics.totalTrades > 0 ? (metrics.totalPnL / metrics.totalTrades).toFixed(2) : '0.00'}
                             </p>
                         </div>
                     </div>
