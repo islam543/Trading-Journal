@@ -72,9 +72,11 @@ FRED_API_KEY="your_fred_api_key"
 
 # Authentication
 AUTH_SECRET="your_nextauth_secret"
-AUTH_GOOGLE_ID="your_google_client_id"
-AUTH_GOOGLE_SECRET="your_google_client_secret"
+GOOGLE_CLIENT_ID="your_google_oauth_web_client_id"
+VITE_GOOGLE_CLIENT_ID="your_google_oauth_web_client_id"
 ```
+
+> `GOOGLE_CLIENT_ID` is used by the Express backend to verify Google ID tokens and `VITE_GOOGLE_CLIENT_ID` is used by the browser to initialize Google Sign-In.
 
 ### 4. Database Sync
 

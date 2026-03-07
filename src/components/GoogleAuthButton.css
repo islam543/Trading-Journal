@@ -1,0 +1,27 @@
+.google-auth-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    min-height: 44px;
+}
+
+.google-auth-wrapper.is-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.google-auth-button-slot {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.google-auth-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: var(--text-gray);
+}
