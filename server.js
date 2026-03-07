@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import axios from "axios";
 import prisma from "./lib/prisma.js";
+import { authRouter } from "./lib/authRoutes.js";
+import { authMiddleware } from "./lib/authMiddleware.js";
 
 dotenv.config();
 
@@ -11,6 +13,9 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+
+// Auth routes (public)
+app.use(authRouter);
 
 // FRED API Proxy Endpoint
 app.get("/api/fred", async (req, res) => {
@@ -60,9 +65,10 @@ app.get("/api/fred", async (req, res) => {
 });
 
 // Trades API Endpoints
-app.get("/api/trades", async (req, res) => {
+app.get("/api/trades", authMiddleware, async (req, res) => {
   try {
     const trades = await prisma.trade.findMany({
+      where: { userId: req.user.id },
       orderBy: { timestamp: "desc" },
     });
     res.json(trades);
@@ -72,7 +78,7 @@ app.get("/api/trades", async (req, res) => {
   }
 });
 
-app.post("/api/trades", async (req, res) => {
+app.post("/api/trades", authMiddleware, async (req, res) => {
   try {
     const {
       symbol,
@@ -103,6 +109,7 @@ app.post("/api/trades", async (req, res) => {
         status: status || "OPEN",
         pnl: pnl,
         imageUrl: imageUrl || null,
+        userId: req.user.id,
       },
     });
     res.json(trade);
@@ -112,7 +119,7 @@ app.post("/api/trades", async (req, res) => {
   }
 });
 
-app.put("/api/trades/:id", async (req, res) => {
+app.put("/api/trades/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -125,6 +132,13 @@ app.put("/api/trades/:id", async (req, res) => {
       status,
       imageUrl,
     } = req.body;
+
+    const existing = await prisma.trade.findFirst({
+      where: { id: Number(id), userId: req.user.id },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: "Trade not found" });
+    }
 
     let pnl = null;
     if (status === "CLOSED" && entryPrice && exitPrice && quantity) {
@@ -153,9 +167,15 @@ app.put("/api/trades/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/trades/:id", async (req, res) => {
+app.delete("/api/trades/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+    const existing = await prisma.trade.findFirst({
+      where: { id: Number(id), userId: req.user.id },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: "Trade not found" });
+    }
     await prisma.trade.delete({
       where: { id: Number(id) },
     });

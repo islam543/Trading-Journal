@@ -1,73 +1,83 @@
-import { useState } from 'react';
-import { LayoutDashboard, BookOpen, Newspaper, Settings, Menu, X, Activity } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Newspaper, Settings, X, Activity, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 interface SidebarProps {
-  activePage: string;
-  onPageChange: (page: string) => void;
+    activePage: string;
+    onPageChange: (page: string) => void;
+    isOpen: boolean;
+    onClose: () => void;
 }
 
-const Sidebar = ({ activePage, onPageChange }: SidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const Sidebar = ({ activePage, onPageChange, isOpen, onClose }: SidebarProps) => {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'journal', label: 'Trade Journal', icon: BookOpen },
-    { id: 'news', label: 'News', icon: Newspaper },
-    { id: 'macro', label: 'Macro Analysis', icon: Activity },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
+    const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'journal', label: 'Trade Journal', icon: BookOpen },
+        { id: 'news', label: 'News', icon: Newspaper },
+        { id: 'macro', label: 'Macro Analysis', icon: Activity },
+        { id: 'settings', label: 'Settings', icon: Settings },
+    ];
 
-  return (
-    <>
-      {/* Mobile Overlay */}
-      {isCollapsed && (
-        <div
-          className="sidebar-overlay"
-          onClick={() => setIsCollapsed(false)}
-        />
-      )}
+    const handleNavClick = (pageId: string) => {
+        onPageChange(pageId);
+        onClose();
+    };
 
-      {/* Sidebar */}
-      <aside className={`sidebar glass ${isCollapsed ? 'collapsed' : ''}`}>
-        {/* Header */}
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            {!isCollapsed && (
-              <h2 className="sidebar-title">Trade Journal</h2>
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
+    return (
+        <>
+            {isOpen && (
+                <div className="sidebar-overlay" onClick={onClose} />
             )}
-          </div>
-          <button
-            className="sidebar-toggle"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            aria-label="Toggle Sidebar"
-          >
-            {isCollapsed ? <Menu size={20} /> : <X size={20} />}
-          </button>
-        </div>
 
-        {/* Navigation */}
-        <nav className="sidebar-nav">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activePage === item.id;
+            <aside className={`sidebar glass ${isOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
+                    <div className="sidebar-logo">
+                        <h2 className="sidebar-title">Trade Journal</h2>
+                    </div>
+                    <button
+                        className="sidebar-close"
+                        onClick={onClose}
+                        aria-label="Close menu"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
 
-            return (
-              <button
-                key={item.id}
-                className={`nav-item glass-hover ${isActive ? 'active' : ''}`}
-                onClick={() => onPageChange(item.id)}
-                title={item.label}
-              >
-                <Icon size={22} className="nav-icon" />
-                {!isCollapsed && <span className="nav-label">{item.label}</span>}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-    </>
-  );
+                <nav className="sidebar-nav">
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = activePage === item.id;
+
+                        return (
+                            <button
+                                key={item.id}
+                                className={`nav-item glass-hover ${isActive ? 'active' : ''}`}
+                                onClick={() => handleNavClick(item.id)}
+                                title={item.label}
+                            >
+                                <Icon size={22} className="nav-icon" />
+                                <span className="nav-label">{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
+
+                <button className="nav-item sidebar-logout" onClick={handleLogout}>
+                    <LogOut size={22} className="nav-icon" />
+                    <span className="nav-label">Logout</span>
+                </button>
+            </aside>
+        </>
+    );
 };
 
 export default Sidebar;

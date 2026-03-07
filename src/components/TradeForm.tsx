@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import './TradeForm.css';
 
 interface TradeFormProps {
@@ -7,6 +8,7 @@ interface TradeFormProps {
 }
 
 const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
+    const { authFetch } = useAuth();
     const [formData, setFormData] = useState({
         symbol: '',
         type: 'BUY',
@@ -47,7 +49,7 @@ const TradeForm = ({ onTradeAdded, onCancel }: TradeFormProps) => {
         setError(null);
 
         try {
-            const res = await fetch('/api/trades', {
+            const res = await authFetch('/api/trades', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -10,17 +10,19 @@ import {
     ReferenceLine
 } from 'recharts';
 import type { Trade } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import './PerformanceChart.css';
 
 const PerformanceChart: React.FC = () => {
     const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily');
     const [trades, setTrades] = useState<Trade[]>([]);
     const [loading, setLoading] = useState(true);
+    const { authFetch } = useAuth();
 
     useEffect(() => {
         const fetchTrades = async () => {
             try {
-                const res = await fetch('/api/trades');
+                const res = await authFetch('/api/trades');
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
                 setTrades(data);
@@ -31,7 +33,7 @@ const PerformanceChart: React.FC = () => {
             }
         };
         fetchTrades();
-    }, []);
+    }, [authFetch]);
 
     const data = useMemo(() => {
         if (trades.length === 0) return [{ time: 'Now', equity: 10000, pnl: 0 }];

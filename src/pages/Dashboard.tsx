@@ -4,16 +4,18 @@ import MetricCard from '../components/MetricCard';
 import PerformanceChart from '../components/PerformanceChart';
 import CalendarView from '../components/CalendarView';
 import GoalsSection from '../components/GoalsSection';
+import { useAuth } from '../contexts/AuthContext';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
     const [trades, setTrades] = useState<Trade[]>([]);
     const [loading, setLoading] = useState(true);
+    const { authFetch } = useAuth();
 
     useEffect(() => {
         const fetchTrades = async () => {
             try {
-                const res = await fetch('/api/trades');
+                const res = await authFetch('/api/trades');
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
                 setTrades(data);
@@ -24,7 +26,7 @@ const Dashboard: React.FC = () => {
             }
         };
         fetchTrades();
-    }, []);
+    }, [authFetch]);
 
     // Calculate dashboard metrics
     const metrics: DashboardMetrics = useMemo(() => {

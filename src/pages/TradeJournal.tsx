@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TradeCard from '../components/TradeCard';
 import TradeForm from '../components/TradeForm';
 import { Plus, X } from 'lucide-react';
 import type { Trade } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import './TradeJournal.css';
 
 const TradeJournal = () => {
@@ -10,11 +11,12 @@ const TradeJournal = () => {
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { authFetch } = useAuth();
 
-    const fetchTrades = async () => {
+    const fetchTrades = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/trades');
+            const res = await authFetch('/api/trades');
             if (!res.ok) throw new Error('Failed to fetch trades');
             const data = await res.json();
             setTrades(data);
@@ -24,11 +26,11 @@ const TradeJournal = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [authFetch]);
 
     useEffect(() => {
         fetchTrades();
-    }, []);
+    }, [fetchTrades]);
 
     const handleTradeAdded = () => {
         setShowForm(false);

@@ -8,6 +8,16 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String?
+  googleId     String?  @unique
+  name         String?
+  createdAt    DateTime @default(now())
+  trades       Trade[]
+}
+
 model Trade {
   id         Int      @id @default(autoincrement())
   symbol     String
@@ -20,4 +30,6 @@ model Trade {
   notes      String?
   imageUrl   String?
   timestamp  DateTime @default(now())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
 }
